@@ -17,7 +17,7 @@ Use pip install ProjectSystemManager
 ## Usage
 The configuration file (config.ini) should be located inside the ProjectSystemManager directory. This file defines the main project directory where all projects will be stored. If the file doesn't exist, it will be created with default settings.
 
-## Functions
+### Functions
 **SetProjectPath(path)**
 Set the main project directory path in the config file.
 from ProjectSystemManager import project
