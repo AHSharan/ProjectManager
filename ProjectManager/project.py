@@ -11,9 +11,31 @@ details = {
     "Summary": ""
 }
 
-# Read configuration from config.ini
+# Define the path to the configuration file inside the ProjectSystemManager directory
+config_file_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+
+# Initialize configuration
 config = configparser.ConfigParser()
-config.read('config.ini')
+
+# Check if the config file exists
+if not os.path.exists(config_file_path):
+    # Create the config file with default settings if it doesn't exist
+    config['Settings'] = {
+        'main_project_directory': 'D:'
+    }
+    with open(config_file_path, 'w') as configfile:
+        config.write(configfile)
+else:
+    # Read the existing config file
+    config.read(config_file_path)
+
+# Ensure the 'Settings' section exists
+if 'Settings' not in config:
+    config['Settings'] = {
+        'main_project_directory': 'D:'
+    }
+    with open(config_file_path, 'w') as configfile:
+        config.write(configfile)
 
 # Initialize PARENTPATH with the value from the config file
 PARENTPATH = config.get('Settings', 'main_project_directory')
@@ -28,18 +50,27 @@ def SetProjectPath(path):
     Returns:
         str: A success message if the path is set successfully.
     """
-    config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read(config_file_path)
     
     if 'Settings' not in config:
         config['Settings'] = {}
     
     config['Settings']['main_project_directory'] = str(path)
     
-    with open('config.ini', 'w') as configfile:
+    with open(config_file_path, 'w') as configfile:
         config.write(configfile)
-    return "Path Set successfully"
+    return "Path set successfully"
+def GetProjectPath():
+    """
+    Get the Project path from config.ini
 
+    Returns:
+        str: The Main path form the config.ini."""
+    with open(config_file_path, 'r') as configfile:
+        config.read(configfile)
+    ProjectPath = config['Settings']['main_project_directory'] 
+    return ProjectPath
+    
 def CreateProject(ProjectName, technologies=None, summary=None, path=None):
     """
     Create a new project directory and details file.
@@ -185,4 +216,3 @@ def FetchProject(ProjectName, Key=None):
             return details  
     else:
         return "details.json not found"
-
