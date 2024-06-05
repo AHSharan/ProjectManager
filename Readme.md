@@ -17,6 +17,8 @@ Use pip install ProjectSystemManager
 ## Usage
 The configuration file (config.ini) should be located inside the ProjectSystemManager directory. This file defines the main project directory where all projects will be stored. If the file doesn't exist, it will be created with default settings.
 
+While importing the Library use syntax as follow <br>
+
 ## Functions
 ### SetProjectPath(path)
 Set the main project directory path in the config file.
@@ -24,15 +26,14 @@ from ProjectSystemManager import project
 
 project.SetProjectPath("E:")
 ### CreateProject(ProjectName, technologies=None, summary=None, path=None)
-Create a new project directory and details file.
-
+Create a new project directory and details file.<br>
 project.CreateProject("MyProject", technologies=["Python", "Django"], summary="A web application project")
 ### SearchProject(keyword=None, start_date=None, end_date=None, path=None)
-Search for projects based on keyword, start date, and end date.
+Search for projects based on keyword, start date, and end date.<br>
 results = project.SearchProject(keyword="web", start_date="2023-01-01", end_date="2023-12-31")
 
 ### UpdateProject(ProjectName, technologies=None, summary=None, path=None)
-Update project details.
+Update project details.<br>
 
 project.UpdateProject("MyProject", technologies=["React"], summary="A web application project using React")
 ### FetchProject(ProjectName, Key=None)
