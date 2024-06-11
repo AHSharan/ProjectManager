@@ -2,20 +2,24 @@ import os
 import json
 from datetime import datetime
 import configparser
+import shutil
+
+config_file_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+
+# Initialize configuration
+config = configparser.ConfigParser()
 
 # Define the default details structure
 details = {
     "Project Name": "",
     "Date Created On": "",
     "Technologies": "",
-    "Summary": ""
-}
+    "Summary": "",
+    "Diffculty":"",
+    "Tags":""
+    }
 
 # Define the path to the configuration file inside the ProjectSystemManager directory
-config_file_path = os.path.join(os.path.dirname(__file__), 'config.ini')
-
-# Initialize configuration
-config = configparser.ConfigParser()
 
 # Check if the config file exists
 if not os.path.exists(config_file_path):
@@ -39,6 +43,8 @@ if 'Settings' not in config:
 
 # Initialize PARENTPATH with the value from the config file
 PARENTPATH = config.get('Settings', 'main_project_directory')
+templates_str = config.get('Settings', 'Templates')
+TEMPLATES = dict(item.split(':') for item in templates_str.split(','))
 
 def SetProjectPath(path):
     """
@@ -60,6 +66,7 @@ def SetProjectPath(path):
     with open(config_file_path, 'w') as configfile:
         config.write(configfile)
     return "Path set successfully"
+
 def GetProjectPath():
     """
     Get the Project path from config.ini
@@ -70,8 +77,16 @@ def GetProjectPath():
         config.read(configfile)
     ProjectPath = config['Settings']['main_project_directory'] 
     return ProjectPath
-    
-def CreateProject(ProjectName, technologies=None, summary=None, path=None):
+
+def CreateTemplate(TemplateName,PROJECTLOCATION):
+    if TemplateName in TEMPLATES:
+        SourceFile = os.path.join(os.path.dirname(__file__), f'Templates/{TEMPLATES[TemplateName]}')
+        DestinationFolder = PROJECTLOCATION
+        shutil.copy(SourceFile, DestinationFolder)
+        return f"{TemplateName} Template successfully created"
+    else:
+        return f"Template '{TemplateName}' does not exist in the configuration."
+def CreateProject(ProjectName, technologies=None, summary=None, path=None, difficulty="Undefined",tags=[],templates=[]):
     """
     Create a new project directory and details file.
 
@@ -84,6 +99,9 @@ def CreateProject(ProjectName, technologies=None, summary=None, path=None):
     Returns:
         str: A success message if the project is created successfully.
     """
+    if os.path.exists(os.path.join(PARENTPATH,ProjectName)):
+        exit( "Folder already exsits")
+        
     if path is None:
         PROJECTLOCATION = os.path.join(PARENTPATH, ProjectName)
     else:
@@ -94,19 +112,25 @@ def CreateProject(ProjectName, technologies=None, summary=None, path=None):
         os.mkdir(PROJECTLOCATION)
     except FileExistsError:
         pass
-    
+
     # Populate project details
     details = {
         "Project Name": ProjectName,
         "Date Created On": datetime.now().strftime("%Y-%m-%d"),
         "Technologies": technologies if technologies else [],
-        "Summary": summary if summary else ""
+        "Summary": summary if summary else "",
+        "Diffculty":difficulty if difficulty else "",
+        "Tags":tags if tags else []
     }
 
     # Write details to JSON file
     with open(os.path.join(PROJECTLOCATION, 'details.json'), 'w') as fp:
         json.dump(details, fp, indent=4)
 
+    for TemplateName in templates:
+        CreateTemplate(TemplateName, PROJECTLOCATION)
+
+        
     return "Project created successfully"
 
 def SearchProject(keyword=None, start_date=None, end_date=None, path=PARENTPATH):
@@ -143,7 +167,9 @@ def SearchProject(keyword=None, start_date=None, end_date=None, path=PARENTPATH)
                         keyword is None or 
                         keyword.lower() in project_name.lower() or 
                         keyword.lower() in details.get("Date Created On", "").lower() or 
-                        any(keyword.lower() in tech.lower() for tech in details.get("Technologies", []))
+                        keyword.lower() in details.get("Diffculty", "").lower() or 
+                        any(keyword.lower() in tech.lower() for tech in details.get("Technologies", [])) or 
+                        any(keyword.lower() in tech.lower() for tech in details.get("Tags", []))
                     )
 
                     matches_date = True
@@ -157,7 +183,7 @@ def SearchProject(keyword=None, start_date=None, end_date=None, path=PARENTPATH)
     
     return results if results else ["No matching projects found"]
 
-def UpdateProject(ProjectName, technologies=None, summary=None, path=None):
+def UpdateProject(ProjectName, technologies=None, summary=None, path=None, difficulty="Undefined",tags=[]):
     """
     Update project details.
 
@@ -183,6 +209,12 @@ def UpdateProject(ProjectName, technologies=None, summary=None, path=None):
                 
             if summary:
                 details["Summary"] = summary
+            if tags:
+                details["Tags"].extend(tags)
+                details["Tags"] = list(set(details["Tags"]))
+                
+            if difficulty:
+                details["Difficulty"] = difficulty
             
             with open(details_file, 'w') as fp:
                 json.dump(details, fp, indent=4)
